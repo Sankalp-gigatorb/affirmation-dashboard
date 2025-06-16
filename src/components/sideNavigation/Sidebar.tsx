@@ -12,10 +12,17 @@ import {
   FiFileText,
   FiFolder,
 } from "react-icons/fi";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import AuthService from "@/services/auth.service";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    AuthService.logout();
+    navigate("/login");
+  };
 
   const navItems = [
     { name: "Dashboard", icon: FiHome, path: "/" },
@@ -72,11 +79,8 @@ const Sidebar = () => {
       {/* Logout Button */}
       <div className="p-4 border-t border-border">
         <button
+          onClick={handleLogout}
           className="flex items-center w-full px-4 py-2 text-sm text-destructive rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
-          onClick={() => {
-            // Add logout logic here
-            console.log("Logout clicked");
-          }}
         >
           <FiLogOut className="w-5 h-5 mr-3" />
           Logout

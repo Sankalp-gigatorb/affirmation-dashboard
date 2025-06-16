@@ -3,18 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import AuthService from "@/services/auth.service";
+
+interface LoginCredentials {
+  identifier: string;
+  password: string;
+}
 
 const Login = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    email: "",
+  const [formData, setFormData] = useState<LoginCredentials>({
+    identifier: "",
     password: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData((prev: LoginCredentials) => ({
       ...prev,
       [name]: value,
     }));
@@ -23,29 +30,21 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     try {
-      // Here you would typically make an API call to your backend
-      // For demo purposes, we'll simulate a successful login with admin role
-      const response = {
-        success: true,
-        user: {
-          email: formData.email,
-          role: "ADMIN",
-        },
-        token: "dummy-token",
-      };
+      const response = await AuthService.login(formData);
 
-      if (response.success && response.user.role === "ADMIN") {
-        // Store the token and user info in localStorage or your preferred state management
-        localStorage.setItem("token", response.token);
-        localStorage.setItem("user", JSON.stringify(response.user));
+      if (response.success && response.data.user.isAdmin) {
         navigate("/"); // Redirect to dashboard
       } else {
-        setError("Invalid credentials or insufficient permissions");
+        setError("Insufficient permissions. Admin access required.");
+        AuthService.logout();
       }
-    } catch (err) {
-      setError("An error occurred during login");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "An error occurred during login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,16 +60,17 @@ const Login = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="identifier">Email</Label>
             <Input
-              id="email"
-              name="email"
+              id="identifier"
+              name="identifier"
               type="email"
               required
-              value={formData.email}
+              value={formData.identifier}
               onChange={handleChange}
               placeholder="Enter your email"
               className="w-full"
+              disabled={isLoading}
             />
           </div>
 
@@ -85,6 +85,7 @@ const Login = () => {
               onChange={handleChange}
               placeholder="Enter your password"
               className="w-full"
+              disabled={isLoading}
             />
           </div>
 
@@ -95,8 +96,9 @@ const Login = () => {
           <Button
             type="submit"
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+            disabled={isLoading}
           >
-            Sign In
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
       </div>
@@ -104,4 +106,4 @@ const Login = () => {
   );
 };
 
-export default Login; 
+export default Login;
