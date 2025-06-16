@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FiUser, FiSettings, FiLogOut, FiChevronDown } from "react-icons/fi";
+import {
+  FiUser,
+  FiSettings,
+  FiLogOut,
+  FiChevronDown,
+  FiBell,
+} from "react-icons/fi";
 
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -26,60 +32,76 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="px-4 h-16 flex items-center justify-end">
-        {/* Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center space-x-3 focus:outline-none"
-          >
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
-              <FiUser className="w-5 h-5" />
-            </div>
-            <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-700">Admin</span>
-              <FiChevronDown
-                className={`w-4 h-4 ml-1 text-gray-500 transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
-              />
-            </div>
+    <header className="bg-card border-b border-border">
+      <div className="px-6 h-16 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">
+          Admin Dashboard
+        </h2>
+
+        <div className="flex items-center space-x-4">
+          <button className="p-2 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors">
+            <FiBell className="w-5 h-5" />
           </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-              <div className="px-4 py-2 border-b border-gray-100">
-                <p className="text-sm font-medium text-gray-900">Admin User</p>
-                <p className="text-xs text-gray-500">admin@example.com</p>
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-3 focus:outline-none hover:bg-primary/10 hover:text-primary p-2 rounded-lg transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-sm font-medium text-primary">JD</span>
               </div>
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-foreground">
+                  Admin
+                </span>
+                <FiChevronDown
+                  className={`w-4 h-4 ml-1 text-foreground transition-transform ${
+                    isDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </div>
+            </button>
 
-              <a
-                href="/profile"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FiUser className="w-4 h-4 mr-2" />
-                Profile
-              </a>
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg py-1 z-50 border border-border">
+                <div className="px-4 py-2 border-b border-border">
+                  <p className="text-sm font-medium text-foreground">
+                    Admin User
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    admin@example.com
+                  </p>
+                </div>
 
-              <a
-                href="/settings"
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <FiSettings className="w-4 h-4 mr-2" />
-                Settings
-              </a>
+                <a
+                  href="/profile"
+                  className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <FiUser className="w-4 h-4 mr-2" />
+                  Profile
+                </a>
 
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-              >
-                <FiLogOut className="w-4 h-4 mr-2" />
-                Logout
-              </button>
-            </div>
-          )}
+                <a
+                  href="/settings"
+                  className="flex items-center px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                >
+                  <FiSettings className="w-4 h-4 mr-2" />
+                  Settings
+                </a>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full px-4 py-2 text-sm text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <FiLogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

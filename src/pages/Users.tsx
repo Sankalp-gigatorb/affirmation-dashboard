@@ -87,8 +87,11 @@ const Users: React.FC = () => {
   return (
     <div className="p-6 bg-background">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Users Management</h1>
-        <Button onClick={() => console.log('Add new user')}>
+        <h1 className="text-2xl font-bold text-foreground">Users Management</h1>
+        <Button 
+          onClick={() => console.log('Add new user')}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+        >
           Add New User
         </Button>
       </div>
@@ -96,20 +99,23 @@ const Users: React.FC = () => {
       <div className="bg-card rounded-lg shadow border">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead>User ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Subscription Status</TableHead>
-              <TableHead>Signup Date</TableHead>
-              <TableHead>Last Login</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead className="text-foreground">User ID</TableHead>
+              <TableHead className="text-foreground">Name</TableHead>
+              <TableHead className="text-foreground">Email</TableHead>
+              <TableHead className="text-foreground">Role</TableHead>
+              <TableHead className="text-foreground">Subscription Status</TableHead>
+              <TableHead className="text-foreground">Signup Date</TableHead>
+              <TableHead className="text-foreground">Last Login</TableHead>
+              <TableHead className="text-right text-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((user) => (
-              <TableRow key={user.id} className="hover:bg-muted/50">
+              <TableRow 
+                key={user.id} 
+                className="hover:bg-primary/5 transition-colors"
+              >
                 <TableCell className="font-medium">{user.id}</TableCell>
                 <TableCell>{user.name}</TableCell>
                 <TableCell>{user.email}</TableCell>
@@ -129,7 +135,7 @@ const Users: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mr-2"
+                    className="mr-2 hover:bg-primary/10 hover:text-primary"
                     onClick={() => handleViewUser(user.id)}
                   >
                     View
@@ -137,7 +143,7 @@ const Users: React.FC = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="mr-2"
+                    className="mr-2 hover:bg-primary/10 hover:text-primary"
                     onClick={() => handleBanUser(user.id)}
                   >
                     Ban

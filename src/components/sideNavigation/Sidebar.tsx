@@ -39,10 +39,10 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="h-screen w-64 bg-card border-r border-border flex flex-col">
       {/* Logo/Brand */}
-      <div className="h-16 flex items-center justify-center border-b border-gray-200">
-        <h1 className="text-xl font-semibold text-gray-800">Affirmation App</h1>
+      <div className="h-16 flex items-center justify-center border-b border-border">
+        <h1 className="text-xl font-semibold text-primary">Affirmation App</h1>
       </div>
 
       {/* Navigation */}
@@ -56,8 +56,8 @@ const Sidebar = () => {
                   to={item.path}
                   className={`flex items-center px-4 py-2 text-sm rounded-lg transition-colors ${
                     isActive(item.path)
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground hover:bg-primary/10 hover:text-primary"
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
@@ -70,9 +70,9 @@ const Sidebar = () => {
       </nav>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-border">
         <button
-          className="flex items-center w-full px-4 py-2 text-sm text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+          className="flex items-center w-full px-4 py-2 text-sm text-destructive rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
           onClick={() => {
             // Add logout logic here
             console.log("Logout clicked");
