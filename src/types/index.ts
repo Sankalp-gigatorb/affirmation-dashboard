@@ -25,8 +25,14 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
+  isPremium: boolean;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    posts: number;
+    affirmations: number;
+    communityPosts: number;
+  };
 }
 
 export interface Comment {

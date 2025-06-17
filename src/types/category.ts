@@ -1,13 +1,14 @@
 export interface CategoryFormData {
   name: string;
   description: string;
-  type: "Affirmation" | "Post" | "Community";
+  isPremium: boolean;
 }
 
 export interface Category {
-  id: number;
+  id: string;
   name: string;
-  type: "Affirmation" | "Post" | "Community";
-  itemCount: number;
+  postCount: number;
+  affirmations: number;
   description?: string;
+  isPremium: boolean;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiEdit2, FiTrash2, FiPlus } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,76 +12,174 @@ import {
 import CreateCategoryModal from "@/components/modals/CreateCategoryModal";
 import EditCategoryModal from "@/components/modals/EditCategoryModal";
 import DeleteCategoryModal from "@/components/modals/DeleteCategoryModal";
-import type { Category, CategoryFormData } from "../types/category";
+import type {
+  Category as UICategory,
+  CategoryFormData,
+} from "../types/category";
+import type { Category as APICategory } from "../types";
+import CategoryService from "@/services/category.service";
+import { toast } from "sonner";
+
+interface PaginationInfo {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface APIResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+interface CategoriesResponse {
+  categories: APICategory[];
+  pagination: PaginationInfo;
+}
 
 const CategoriesManagement = () => {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: 1,
-      name: "Daily Affirmations",
-      type: "Affirmation",
-      itemCount: 150,
-      description: "Positive daily affirmations for personal growth",
-    },
-    {
-      id: 2,
-      name: "Success Stories",
-      type: "Post",
-      itemCount: 45,
-      description: "User success stories and testimonials",
-    },
-    {
-      id: 3,
-      name: "Community Challenges",
-      type: "Community",
-      itemCount: 12,
-      description: "Monthly community challenges and activities",
-    },
-  ]);
-
+  const [categories, setCategories] = useState<UICategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(
+  const [selectedCategory, setSelectedCategory] = useState<UICategory | null>(
     null
   );
 
-  const handleCreateCategory = (data: CategoryFormData) => {
-    const newCategory: Category = {
-      id: categories.length + 1,
-      name: data.name,
-      type: data.type,
-      itemCount: 0,
-      description: data.description,
-    };
-    setCategories([...categories, newCategory]);
-    setIsCreateModalOpen(false);
-  };
+  console.log(selectedCategory, "selectedCategory");
 
-  const handleEditCategory = (data: CategoryFormData) => {
-    if (selectedCategory) {
-      setCategories(
-        categories.map((cat) =>
-          cat.id === selectedCategory.id
-            ? {
-                ...cat,
-                name: data.name,
-                type: data.type,
-                description: data.description,
-              }
-            : cat
-        )
-      );
-      setIsEditModalOpen(false);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 1,
+  });
+
+  const mapAPICategoryToUICategory = (
+    apiCategory: APICategory
+  ): UICategory => ({
+    id: apiCategory.id,
+    name: apiCategory.name,
+    postCount:
+      (apiCategory._count?.posts || 0) +
+      (apiCategory._count?.communityPosts || 0),
+    affirmations: apiCategory._count?.affirmations || 0,
+    description: apiCategory.description,
+    isPremium: apiCategory.isPremium,
+  });
+
+  const fetchCategories = async () => {
+    try {
+      setIsLoading(true);
+      const response =
+        (await CategoryService.getAllCategories()) as unknown as APIResponse<CategoriesResponse>;
+      if (response.success) {
+        setCategories(response.data.categories.map(mapAPICategoryToUICategory));
+        setPagination(response.data.pagination);
+      } else {
+        toast.error("Failed to fetch categories");
+      }
+    } catch (error) {
+      toast.error("Failed to fetch categories");
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDeleteCategory = () => {
-    if (selectedCategory) {
-      setCategories(categories.filter((cat) => cat.id !== selectedCategory.id));
-      setIsDeleteModalOpen(false);
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const handleCreateCategory = async (data: CategoryFormData) => {
+    try {
+      const response = (await CategoryService.createCategory({
+        name: data.name,
+        description: data.description,
+        isPremium: data.isPremium,
+      })) as unknown as APIResponse<APICategory>;
+
+      if (response.success) {
+        setCategories([
+          ...categories,
+          mapAPICategoryToUICategory(response.data),
+        ]);
+        setIsCreateModalOpen(false);
+        toast.success("Category created successfully");
+      } else {
+        toast.error("Failed to create category");
+      }
+    } catch (error) {
+      toast.error("Failed to create category");
+      console.error("Error creating category:", error);
     }
   };
+
+  const handleEditCategory = async (data: CategoryFormData) => {
+    console.log(selectedCategory);
+
+    if (selectedCategory) {
+      try {
+        const response = (await CategoryService.updateCategory(
+          selectedCategory.id.toString(),
+          {
+            name: data.name,
+            description: data.description,
+            isPremium: selectedCategory.isPremium, // Preserve existing premium status
+          }
+        )) as unknown as APIResponse<APICategory>;
+
+        if (response.success) {
+          setCategories(
+            categories.map((cat) =>
+              cat.id === selectedCategory.id
+                ? mapAPICategoryToUICategory(response.data)
+                : cat
+            )
+          );
+          setIsEditModalOpen(false);
+          toast.success("Category updated successfully");
+        } else {
+          toast.error("Failed to update category");
+        }
+      } catch (error) {
+        toast.error("Failed to update category");
+        console.error("Error updating category:", error);
+      }
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (selectedCategory) {
+      try {
+        const response = (await CategoryService.deleteCategory(
+          selectedCategory.id.toString()
+        )) as unknown as APIResponse<void>;
+
+        if (response.success) {
+          setCategories(
+            categories.filter((cat) => cat.id !== selectedCategory.id)
+          );
+          setIsDeleteModalOpen(false);
+          toast.success("Category deleted successfully");
+        } else {
+          toast.error("Failed to delete category");
+        }
+      } catch (error) {
+        toast.error("Failed to delete category");
+        console.error("Error deleting category:", error);
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-background flex items-center justify-center">
+        <div className="text-lg">Loading categories...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-background">
@@ -97,8 +195,9 @@ const CategoriesManagement = () => {
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Items</TableHead>
+              <TableHead>Posts</TableHead>
+              <TableHead>affirmations</TableHead>
+              <TableHead>IsPremium</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -107,8 +206,9 @@ const CategoriesManagement = () => {
             {categories.map((category) => (
               <TableRow key={category.id} className="hover:bg-muted/50">
                 <TableCell className="font-medium">{category.name}</TableCell>
-                <TableCell>{category.type}</TableCell>
-                <TableCell>{category.itemCount}</TableCell>
+                <TableCell>{category.postCount}</TableCell>
+                <TableCell>{category.affirmations}</TableCell>
+                <TableCell>{category.isPremium ? "Yes":"No"}</TableCell>
                 <TableCell>{category.description}</TableCell>
                 <TableCell className="text-right">
                   <Button
@@ -154,15 +254,12 @@ const CategoriesManagement = () => {
             ? {
                 name: selectedCategory.name,
                 description: selectedCategory.description || "",
-                type: selectedCategory.type as
-                  | "Affirmation"
-                  | "Post"
-                  | "Community",
+                isPremium: selectedCategory.isPremium,
               }
             : {
                 name: "",
                 description: "",
-                type: "Affirmation",
+                isPremium: false,
               }
         }
       />

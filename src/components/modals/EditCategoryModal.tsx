@@ -73,23 +73,22 @@ const EditCategoryModal: React.FC<EditCategoryModalProps> = ({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="isPremium">Premium Status</Label>
             <Select
-              value={formData.type}
+              value={formData.isPremium ? "premium" : "non-premium"}
               onValueChange={(value) =>
                 setFormData({
                   ...formData,
-                  type: value as "Affirmation" | "Post" | "Community",
+                  isPremium: value === "premium",
                 })
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Select premium status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Affirmation">Affirmation</SelectItem>
-                <SelectItem value="Post">Post</SelectItem>
-                <SelectItem value="Community">Community</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+                <SelectItem value="non-premium">Non-Premium</SelectItem>
               </SelectContent>
             </Select>
           </div>

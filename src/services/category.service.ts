@@ -4,17 +4,19 @@ import type { Category } from "../types";
 interface CreateCategoryData {
   name: string;
   description?: string;
+  isPremium: boolean;
 }
 
 interface UpdateCategoryData {
   name?: string;
   description?: string;
+  isPremium?: boolean;
 }
 
 const CategoryService = {
   getAllCategories: async (): Promise<Category[]> => {
     try {
-      const response = await api.get<Category[]>("/categories");
+      const response = await api.get<Category[]>("/category/");
       return response.data;
     } catch (error) {
       throw error;
@@ -35,7 +37,7 @@ const CategoryService = {
   ): Promise<Category> => {
     try {
       const response = await api.post<Category>(
-        "/categories/create",
+        "/category/create",
         categoryData
       );
       return response.data;
@@ -50,7 +52,7 @@ const CategoryService = {
   ): Promise<Category> => {
     try {
       const response = await api.put<Category>(
-        `/categories/${categoryId}`,
+        `/category/${categoryId}`,
         categoryData
       );
       return response.data;
