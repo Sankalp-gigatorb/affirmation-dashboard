@@ -18,13 +18,32 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import CreateAffirmationModal from "@/components/modals/CreateAffirmationModal";
+import EditAffirmationModal from "@/components/modals/EditAffirmationModal";
+import DeleteAffirmationModal from "@/components/modals/DeleteAffirmationModal";
 import AffirmationService from "@/services/affirmation.service";
 import CategoryService from "@/services/category.service";
 import type { Affirmation, Category } from "@/types";
 import { toast } from "sonner";
 
+interface CategoryResponse {
+  success: boolean;
+  data: {
+    categories: Category[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
+
 const ManageAffirmations = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedAffirmation, setSelectedAffirmation] =
+    useState<Affirmation | null>(null);
   const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,14 +58,11 @@ const ManageAffirmations = () => {
         AffirmationService.getAllAffirmations(),
         CategoryService.getAllCategories(),
       ]);
-      console.log(affirmationsData, categoriesResponse);
 
       setAffirmations(Array.isArray(affirmationsData) ? affirmationsData : []);
-      setCategories(
-        Array.isArray(categoriesResponse?.data?.categories)
-          ? categoriesResponse.data.categories
-          : []
-      );
+      const categoriesData = (categoriesResponse as unknown as CategoryResponse)
+        ?.data?.categories;
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       toast.error("Failed to fetch data");
       console.error("Error fetching data:", error);
@@ -83,21 +99,102 @@ const ManageAffirmations = () => {
     }
   };
 
-  const handleView = (id: string) => {
-    console.log("View affirmation:", id);
+  const handleEditAffirmation = async (data: {
+    content: string;
+    audioUrl?: string;
+    categoryId?: string;
+    isPremium: boolean;
+  }) => {
+    if (!selectedAffirmation) return;
+
+    try {
+      const updatedAffirmation = await AffirmationService.updateAffirmation(
+        selectedAffirmation.id,
+        data
+      );
+      setAffirmations((prev) =>
+        prev.map((a) =>
+          a.id === selectedAffirmation.id ? updatedAffirmation : a
+        )
+      );
+      setIsEditModalOpen(false);
+      setSelectedAffirmation(null);
+      toast.success("Affirmation updated successfully");
+    } catch (error) {
+      toast.error("Failed to update affirmation");
+      console.error("Error updating affirmation:", error);
+    }
   };
 
-  const handleEdit = (id: string) => {
-    console.log("Edit affirmation:", id);
+  const handleView = async (id: string) => {
+    try {
+      const affirmation = await AffirmationService.getAffirmationById(id);
+      console.log("View affirmation:", affirmation);
+      // TODO: Implement view modal or navigation
+    } catch (error) {
+      toast.error("Failed to fetch affirmation details");
+      console.error("Error fetching affirmation:", error);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    console.log("Delete affirmation:", id);
+  const handleEdit = async (id: string) => {
+    try {
+      const affirmation = await AffirmationService.getAffirmationById(id);
+      setSelectedAffirmation(affirmation);
+      setIsEditModalOpen(true);
+    } catch (error) {
+      toast.error("Failed to fetch affirmation details");
+      console.error("Error fetching affirmation:", error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const affirmation = await AffirmationService.getAffirmationById(id);
+      setSelectedAffirmation(affirmation);
+      setIsDeleteModalOpen(true);
+    } catch (error) {
+      toast.error("Failed to fetch affirmation details");
+      console.error("Error fetching affirmation:", error);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedAffirmation) return;
+
+    try {
+      await AffirmationService.deleteAffirmation(selectedAffirmation.id);
+      setAffirmations((prev) =>
+        prev.filter((a) => a.id !== selectedAffirmation.id)
+      );
+      setIsDeleteModalOpen(false);
+      setSelectedAffirmation(null);
+      toast.success("Affirmation deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete affirmation");
+      console.error("Error deleting affirmation:", error);
+    }
   };
 
   const handleBulkImport = () => {
     console.log("Bulk import");
   };
+
+  // Filter affirmations based on search query, category, and status
+  const filteredAffirmations = affirmations.filter((affirmation) => {
+    const matchesSearch = affirmation.content
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "All Categories" ||
+      affirmation.categoryId === selectedCategory;
+    const matchesStatus =
+      selectedStatus === "All" ||
+      (selectedStatus === "Premium" && affirmation.isPremium) ||
+      (selectedStatus === "Free" && !affirmation.isPremium);
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   if (isLoading) {
     return (
@@ -119,13 +216,13 @@ const ManageAffirmations = () => {
             <FiPlus className="w-4 h-4 mr-2" />
             Add New
           </Button>
-          <Button
+          {/* <Button
             onClick={handleBulkImport}
             variant="outline"
             className="border-primary text-primary hover:bg-primary/10"
           >
             Bulk Import
-          </Button>
+          </Button> */}
         </div>
       </div>
 
@@ -134,6 +231,27 @@ const ManageAffirmations = () => {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmit={handleCreateAffirmation}
         categories={categories}
+      />
+
+      <EditAffirmationModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedAffirmation(null);
+        }}
+        onSubmit={handleEditAffirmation}
+        categories={categories}
+        affirmation={selectedAffirmation}
+      />
+
+      <DeleteAffirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSelectedAffirmation(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        affirmationContent={selectedAffirmation?.content}
       />
 
       {/* Filters */}
@@ -185,74 +303,73 @@ const ManageAffirmations = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.isArray(affirmations) &&
-              affirmations.map((affirmation) => (
-                <TableRow key={affirmation.id}>
-                  <TableCell className="font-medium">
-                    {affirmation.content}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        affirmation.isPremium
-                          ? "bg-primary/10 text-primary"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+            {filteredAffirmations.map((affirmation) => (
+              <TableRow key={affirmation.id}>
+                <TableCell className="font-medium">
+                  {affirmation.content}
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      affirmation.isPremium
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {affirmation.isPremium ? "Premium" : "Free"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {affirmation.category?.name || "Uncategorized"}
+                </TableCell>
+                <TableCell>
+                  {affirmation.audioUrl ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() =>
+                        window.open(affirmation.audioUrl, "_blank")
+                      }
                     >
-                      {affirmation.isPremium ? "Premium" : "Free"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {affirmation.category?.name || "Uncategorized"}
-                  </TableCell>
-                  <TableCell>
-                    {affirmation.audioUrl ? (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          window.open(affirmation.audioUrl, "_blank")
-                        }
-                      >
-                        <FiMusic className="w-4 h-4" />
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground">No audio</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(affirmation.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(affirmation.updatedAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleView(affirmation.id)}
-                      >
-                        <FiEye className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(affirmation.id)}
-                      >
-                        <FiEdit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(affirmation.id)}
-                      >
-                        <FiTrash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <FiMusic className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <span className="text-muted-foreground">No audio</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {new Date(affirmation.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  {new Date(affirmation.updatedAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleView(affirmation.id)}
+                    >
+                      <FiEye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleEdit(affirmation.id)}
+                    >
+                      <FiEdit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(affirmation.id)}
+                    >
+                      <FiTrash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
