@@ -1,12 +1,5 @@
-import React, { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import React, { useState, useEffect } from "react";
+import { FiPlus, FiEye, FiEdit2, FiTrash2, FiMusic } from "react-icons/fi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,219 +10,249 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  FiPlus,
-  FiUpload,
-  FiSearch,
-  FiEye,
-  FiEdit2,
-  FiTrash2,
-  FiStar,
-} from "react-icons/fi";
-
-// Mock data - replace with actual data from your API
-const affirmations = [
-  {
-    id: 1,
-    text: "I am capable of achieving great things",
-    type: "Free",
-    category: "Motivation",
-    createdBy: "Admin",
-    status: "Active",
-  },
-  {
-    id: 2,
-    text: "I choose to be confident and self-assured",
-    type: "Paid",
-    category: "Self-love",
-    createdBy: "User",
-    status: "Active",
-  },
-  {
-    id: 3,
-    text: "My body is healthy and strong",
-    type: "Free",
-    category: "Health",
-    createdBy: "Admin",
-    status: "Hidden",
-  },
-];
-
-const categories = [
-  "All Categories",
-  "Self-love",
-  "Motivation",
-  "Health",
-  "Success",
-  "Relationships",
-  "Career",
-];
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import CreateAffirmationModal from "@/components/modals/CreateAffirmationModal";
+import AffirmationService from "@/services/affirmation.service";
+import CategoryService from "@/services/category.service";
+import type { Affirmation, Category } from "@/types";
+import { toast } from "sonner";
 
 const ManageAffirmations = () => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStatus, setSelectedStatus] = useState("All");
 
-  const handleView = (id: number) => {
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const [affirmationsData, categoriesResponse] = await Promise.all([
+        AffirmationService.getAllAffirmations(),
+        CategoryService.getAllCategories(),
+      ]);
+      console.log(affirmationsData, categoriesResponse);
+
+      setAffirmations(Array.isArray(affirmationsData) ? affirmationsData : []);
+      setCategories(
+        Array.isArray(categoriesResponse?.data?.categories)
+          ? categoriesResponse.data.categories
+          : []
+      );
+    } catch (error) {
+      toast.error("Failed to fetch data");
+      console.error("Error fetching data:", error);
+      setAffirmations([]);
+      setCategories([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCreateAffirmation = async (data: {
+    content: string;
+    audioUrl?: string;
+    categoryId?: string;
+    isPremium: boolean;
+  }) => {
+    try {
+      const newAffirmation = await AffirmationService.createAffirmation({
+        content: data.content,
+        audioUrl: data.audioUrl,
+        categoryId: data.categoryId || "",
+        isPremium: data.isPremium,
+      });
+      setAffirmations((prev) => [...prev, newAffirmation]);
+      setIsCreateModalOpen(false);
+      toast.success("Affirmation created successfully");
+    } catch (error) {
+      toast.error("Failed to create affirmation");
+      console.error("Error creating affirmation:", error);
+    }
+  };
+
+  const handleView = (id: string) => {
     console.log("View affirmation:", id);
   };
 
-  const handleEdit = (id: number) => {
+  const handleEdit = (id: string) => {
     console.log("Edit affirmation:", id);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     console.log("Delete affirmation:", id);
-  };
-
-  const handleFeature = (id: number) => {
-    console.log("Feature affirmation:", id);
-  };
-
-  const handleAddNew = () => {
-    console.log("Add new affirmation");
   };
 
   const handleBulkImport = () => {
     console.log("Bulk import");
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 bg-background flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Manage Affirmations</h1>
+    <div className="p-6 bg-background">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Manage Affirmations</h1>
         <div className="flex gap-2">
           <Button
-            onClick={handleAddNew}
+            onClick={() => setIsCreateModalOpen(true)}
             className="bg-primary hover:bg-primary/90"
           >
             <FiPlus className="w-4 h-4 mr-2" />
             Add New
           </Button>
-          <Button variant="outline" onClick={handleBulkImport}>
-            <FiUpload className="w-4 h-4 mr-2" />
+          <Button
+            onClick={handleBulkImport}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary/10"
+          >
             Bulk Import
           </Button>
         </div>
       </div>
 
+      <CreateAffirmationModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateAffirmation}
+        categories={categories}
+      />
+
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search affirmations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
+      <div className="flex gap-4 mb-6">
+        <Input
+          placeholder="Search affirmations..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Category" />
+            <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category} value={category}>
-                {category}
-              </SelectItem>
-            ))}
+            <SelectItem value="All Categories">All Categories</SelectItem>
+            {Array.isArray(categories) &&
+              categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
         <Select value={selectedStatus} onValueChange={setSelectedStatus}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Status" />
+            <SelectValue placeholder="Select status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="All">All Status</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Hidden">Hidden</SelectItem>
+            <SelectItem value="All">All</SelectItem>
+            <SelectItem value="Premium">Premium</SelectItem>
+            <SelectItem value="Free">Free</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border border-border">
+      <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Title/Text</TableHead>
+              <TableHead>Content</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead>Audio</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead>Updated At</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {affirmations.map((affirmation) => (
-              <TableRow key={affirmation.id}>
-                <TableCell className="font-medium">{affirmation.id}</TableCell>
-                <TableCell>{affirmation.text}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      affirmation.type === "Paid"
-                        ? "bg-primary/10 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {affirmation.type}
-                  </span>
-                </TableCell>
-                <TableCell>{affirmation.category}</TableCell>
-                <TableCell>{affirmation.createdBy}</TableCell>
-                <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      affirmation.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {affirmation.status}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleView(affirmation.id)}
-                      className="hover:bg-primary/10 hover:text-primary"
+            {Array.isArray(affirmations) &&
+              affirmations.map((affirmation) => (
+                <TableRow key={affirmation.id}>
+                  <TableCell className="font-medium">
+                    {affirmation.content}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        affirmation.isPremium
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
                     >
-                      <FiEye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(affirmation.id)}
-                      className="hover:bg-primary/10 hover:text-primary"
-                    >
-                      <FiEdit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(affirmation.id)}
-                      className="hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleFeature(affirmation.id)}
-                      className="hover:bg-primary/10 hover:text-primary"
-                    >
-                      <FiStar className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+                      {affirmation.isPremium ? "Premium" : "Free"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {affirmation.category?.name || "Uncategorized"}
+                  </TableCell>
+                  <TableCell>
+                    {affirmation.audioUrl ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          window.open(affirmation.audioUrl, "_blank")
+                        }
+                      >
+                        <FiMusic className="w-4 h-4" />
+                      </Button>
+                    ) : (
+                      <span className="text-muted-foreground">No audio</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(affirmation.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(affirmation.updatedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleView(affirmation.id)}
+                      >
+                        <FiEye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(affirmation.id)}
+                      >
+                        <FiEdit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(affirmation.id)}
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </div>

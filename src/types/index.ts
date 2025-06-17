@@ -55,3 +55,25 @@ export interface ApiError {
   status?: number;
   errors?: string[];
 }
+
+export interface Affirmation {
+  id: string;
+  content: string;
+  categoryId: string;
+  isPremium: boolean;
+  audioUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+  category?: Category;
+}
+
+export interface AffirmationHistory {
+  id: string;
+  affirmationId: string;
+  userId: string;
+  completed: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  affirmation?: Affirmation;
+}
