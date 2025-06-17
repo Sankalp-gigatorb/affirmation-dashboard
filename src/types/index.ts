@@ -9,15 +9,17 @@ export interface User {
 
 export interface Post {
   id: string;
-  title: string;
+  authorId: string;
   content: string;
-  userId: string;
-  categoryId: string;
+  mediaUrl?: string;
+  postType: "IMAGE" | "VIDEO" | "TEXT";
+  categoryId?: string;
+  privacy: "PUBLIC" | "PRIVATE";
   createdAt: string;
   updatedAt: string;
-  user?: User;
+  author?: Author;
   category?: Category;
-  likes?: number;
+  tags?: Tag[];
   comments?: Comment[];
 }
 
@@ -37,12 +39,11 @@ export interface Category {
 
 export interface Comment {
   id: string;
-  content: string;
-  userId: string;
   postId: string;
+  userId: string;
+  content: string;
   createdAt: string;
   updatedAt: string;
-  user?: User;
 }
 
 export interface AuthResponse {
@@ -76,4 +77,19 @@ export interface AffirmationHistory {
   createdAt: string;
   updatedAt: string;
   affirmation?: Affirmation;
+}
+
+export interface Author {
+  id: string;
+  firstName: string;
+  lastName: string;
+  username: string;
+}
+
+export interface Tag {
+  id: string;
+  postId: string;
+  tag: string;
+  createdAt: string;
+  updatedAt: string;
 }

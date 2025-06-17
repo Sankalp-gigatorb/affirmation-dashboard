@@ -1,83 +1,71 @@
-import type { Post } from "@/types";
 import api from "./api.config";
+import type { Post } from "@/types";
 
+interface PostResponse {
+  success: boolean;
+  data: {
+    posts: Post[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  };
+}
 
 interface CreatePostData {
-  title: string;
   content: string;
-  categoryId: string;
+  mediaUrl?: string;
+  postType: "IMAGE" | "VIDEO" | "TEXT";
+  categoryId?: string;
+  privacy: "PUBLIC" | "PRIVATE";
+  tags?: string[];
 }
 
 interface UpdatePostData {
-  title?: string;
   content?: string;
+  mediaUrl?: string;
+  postType?: "IMAGE" | "VIDEO" | "TEXT";
   categoryId?: string;
+  privacy?: "PUBLIC" | "PRIVATE";
+  tags?: string[];
 }
 
-const PostService = {
-  createPost: async (postData: CreatePostData): Promise<Post> => {
-    try {
-      const response = await api.post<Post>("/posts/create", postData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+class PostService {
+  async getAllPosts(): Promise<Post[]> {
+    const response = await api.get<PostResponse>("/post/admin/all");
+    return response.data.data.posts;
+  }
 
-  getPost: async (postId: string): Promise<Post> => {
-    try {
-      const response = await api.get<Post>(`/posts/${postId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  async getPostById(id: string): Promise<Post> {
+    const response = await api.get<Post>(`/post/${id}`);
+    return response.data;
+  }
 
-  updatePost: async (
-    postId: string,
-    postData: UpdatePostData
-  ): Promise<Post> => {
-    try {
-      const response = await api.put<Post>(`/posts/${postId}`, postData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  async createPost(data: CreatePostData): Promise<Post> {
+    const response = await api.post<Post>("/post/create", data);
+    return response.data;
+  }
 
-  deletePost: async (postId: string): Promise<void> => {
-    try {
-      await api.delete(`/posts/${postId}`);
-    } catch (error) {
-      throw error;
-    }
-  },
+  async updatePost(id: string, data: UpdatePostData): Promise<Post> {
+    const response = await api.put<Post>(`/post/${id}`, data);
+    return response.data;
+  }
 
-  getUserPosts: async (userId: string): Promise<Post[]> => {
-    try {
-      const response = await api.get<Post[]>(`/posts/user/${userId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  async deletePost(id: string): Promise<void> {
+    const response = await api.delete(`/post/${id}`);
+    return response.data;
+  }
 
-  getAllPosts: async (): Promise<Post[]> => {
-    try {
-      const response = await api.get<Post[]>("/posts/admin/all");
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
+  async getUserPosts(userId: string): Promise<Post[]> {
+    const response = await api.get<Post[]>(`/posts/user/${userId}`);
+    return response.data;
+  }
 
-  adminDeletePost: async (postId: string): Promise<void> => {
-    try {
-      await api.delete(`/posts/admin/${postId}`);
-    } catch (error) {
-      throw error;
-    }
-  },
-};
+  async adminDeletePost(postId: string): Promise<void> {
+    await api.delete(`/posts/admin/${postId}`);
+  }
+}
 
-export default PostService;
+export default new PostService();
