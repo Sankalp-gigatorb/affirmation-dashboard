@@ -47,7 +47,7 @@ const CategoriesManagement = () => {
     null
   );
 
-  console.log(selectedCategory, "selectedCategory");
+  // console.log(selectedCategory, "selectedCategory"); 
 
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
@@ -117,7 +117,7 @@ const CategoriesManagement = () => {
   };
 
   const handleEditCategory = async (data: CategoryFormData) => {
-    console.log(selectedCategory);
+    // console.log(selectedCategory);
 
     if (selectedCategory) {
       try {
@@ -126,7 +126,7 @@ const CategoriesManagement = () => {
           {
             name: data.name,
             description: data.description,
-            isPremium: selectedCategory.isPremium, // Preserve existing premium status
+            isPremium: data.isPremium,
           }
         )) as unknown as APIResponse<APICategory>;
 
@@ -153,19 +153,13 @@ const CategoriesManagement = () => {
   const handleDeleteCategory = async () => {
     if (selectedCategory) {
       try {
-        const response = (await CategoryService.deleteCategory(
-          selectedCategory.id.toString()
-        )) as unknown as APIResponse<void>;
-
-        if (response.success) {
-          setCategories(
-            categories.filter((cat) => cat.id !== selectedCategory.id)
-          );
-          setIsDeleteModalOpen(false);
-          toast.success("Category deleted successfully");
-        } else {
-          toast.error("Failed to delete category");
-        }
+        await CategoryService.deleteCategory(selectedCategory.id.toString());
+        setCategories(
+          categories.filter((cat) => cat.id !== selectedCategory.id)
+        );
+        setSelectedCategory(null);
+        setIsDeleteModalOpen(false);
+        toast.success("Category deleted successfully");
       } catch (error) {
         toast.error("Failed to delete category");
         console.error("Error deleting category:", error);
@@ -197,7 +191,7 @@ const CategoriesManagement = () => {
               <TableHead>Name</TableHead>
               <TableHead>Posts</TableHead>
               <TableHead>affirmations</TableHead>
-              <TableHead>IsPremium</TableHead>
+              <TableHead>Is Premium</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -208,7 +202,9 @@ const CategoriesManagement = () => {
                 <TableCell className="font-medium">{category.name}</TableCell>
                 <TableCell>{category.postCount}</TableCell>
                 <TableCell>{category.affirmations}</TableCell>
-                <TableCell>{category.isPremium ? "Yes":"No"}</TableCell>
+                <TableCell>
+                  {category.isPremium ? "premium" : "non-premium"}
+                </TableCell>
                 <TableCell>{category.description}</TableCell>
                 <TableCell className="text-right">
                   <Button

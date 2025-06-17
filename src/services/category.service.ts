@@ -63,7 +63,7 @@ const CategoryService = {
 
   deleteCategory: async (categoryId: string): Promise<void> => {
     try {
-      await api.delete(`/categories/${categoryId}`);
+      await api.delete(`/category/${categoryId}`);
     } catch (error) {
       throw error;
     }
