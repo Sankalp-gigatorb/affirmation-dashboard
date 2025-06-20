@@ -1,57 +1,59 @@
-import axios from "axios";
+import api from "./api.config";
 
-const API_URL = "http://localhost:8000/api";
-
-interface LoginCredentials {
-  identifier: string;
-  password: string;
-}
-
-interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  isAdmin: boolean;
-}
-
-interface AuthResponse {
+interface LoginResponse {
   success: boolean;
   data: {
-    user: User;
     token: string;
+    user: {
+      id: string;
+      email: string;
+      isAdmin: boolean;
+    };
   };
 }
 
-class AuthService {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await axios.post(`${API_URL}/auth/login`, credentials);
-    if (response.data.data.token) {
-      localStorage.setItem("token", response.data.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.data.user));
+const TOKEN_KEY = "auth_token";
+const USER_KEY = "user_data";
+
+const AuthService = {
+  login: async (credentials: {
+    identifier: string;
+    password: string;
+  }): Promise<LoginResponse> => {
+    const response = await api.post("/auth/login", credentials);
+    if (response.data.success) {
+      localStorage.setItem(TOKEN_KEY, response.data.data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(response.data.data.user));
     }
     return response.data;
-  }
+  },
 
-  logout(): void {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-  }
+  logout: async () => {
+    try {
+      // Try to remove FCM token from server before logging out
+      await api.post("/notifications/token/remove");
+    } catch (error) {
+      console.error("Error removing FCM token:", error);
+    }
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
 
-  getCurrentUser(): User | null {
-    const userStr = localStorage.getItem("user");
-    if (userStr) return JSON.parse(userStr);
+  getToken: (): string | null => {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem(USER_KEY);
+    if (userStr) {
+      return JSON.parse(userStr);
+    }
     return null;
-  }
+  },
 
-  getToken(): string | null {
-    return localStorage.getItem("token");
-  }
+  isAuthenticated: (): boolean => {
+    return !!localStorage.getItem(TOKEN_KEY);
+  },
+};
 
-  isAuthenticated(): boolean {
-    return !!this.getToken();
-  }
-}
-
-export default new AuthService();
+export default AuthService;

@@ -15,188 +15,195 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { NotificationManager } from "./components/notifications/NotificationManager";
+import { Toaster } from "sonner";
+import AuthService from "./services/auth.service";
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem("token");
+  const isAuthenticated = AuthService.isAuthenticated();
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        
-        {/* Protected Admin Routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Dashboard />
-                  </main>
+    <>
+      <Toaster />
+      {isAuthenticated && <NotificationManager />}
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Protected Admin Routes */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Dashboard />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/affirmations"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <ManageAffirmations />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/affirmations"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <ManageAffirmations />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/posts"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <PostsManagement />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/posts"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <PostsManagement />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/categories"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <CategoriesManagement />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/categories"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <CategoriesManagement />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Users />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Users />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/communities"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Communities />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/communities"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Communities />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/subscriptions"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Subscriptions />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/subscriptions"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Subscriptions />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Notifications />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Notifications />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/reports"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Reports />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Reports />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <div className="flex">
-                <Sidebar />
-                <div className="flex-1">
-                  <Header />
-                  <main>
-                    <Settings />
-                  </main>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Settings />
+                    </main>
+                  </div>
                 </div>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 
