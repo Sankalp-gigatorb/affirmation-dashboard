@@ -1,4 +1,4 @@
-import { getToken, onMessage } from "firebase/messaging";
+import { getToken, onMessage, deleteToken } from "firebase/messaging";
 import { messaging } from "../config/firebase";
 import api from "./api.config";
 
@@ -50,6 +50,24 @@ const NotificationService = {
     }
   },
 
+  deleteToken: async () => {
+    try {
+      if (!messaging) {
+        throw new Error("Messaging is not initialized");
+      }
+      const isDeleted = await deleteToken(messaging);
+      if (isDeleted) {
+        console.log("FCM token deleted successfully");
+      } else {
+        console.log("Could not delete FCM token");
+      }
+      return isDeleted;
+    } catch (error) {
+      console.error("Error deleting token:", error);
+      throw error;
+    }
+  },
+
   onMessageListener: () =>
     new Promise((resolve) => {
       if (!messaging) {
@@ -82,10 +100,7 @@ const NotificationService = {
   },
 
   scheduleCommunityUpdate: async (payload: NotificationPayload) => {
-    return api.post(
-      "/admin/notifications/schedule/community-update",
-      payload
-    );
+    return api.post("/admin/notifications/schedule/community-update", payload);
   },
 
   scheduleAnnouncement: async (payload: NotificationPayload) => {

@@ -15,6 +15,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { NotificationTester } from "@/components/notifications/NotificationTester";
+import { TokenTester } from "../components/notifications/TokenTester";
 
 // Mock data - replace with actual data from your API
 const userSignupsData = [
@@ -48,13 +50,16 @@ const COLORS = ["#fdcb6e", "#10b981", "#6366f1", "#f59e0b", "#ef4444"];
 
 const Dashboard = () => {
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <TokenTester />
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <p>Welcome to the admin dashboard.</p>
+      {/* Add dashboard widgets and stats here */}
 
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          {/* <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Affirmations
             </CardTitle>
@@ -65,7 +70,8 @@ const Dashboard = () => {
             <p className="text-xs text-muted-foreground">
               +12% from last month
             </p>
-          </CardContent>
+          </CardContent> */}
+          <NotificationTester />
         </Card>
 
         <Card>
