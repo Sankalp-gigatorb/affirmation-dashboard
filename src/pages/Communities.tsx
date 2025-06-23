@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -8,47 +8,68 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FiEye, FiTrash2, FiStar } from "react-icons/fi";
-
-// Mock data - replace with actual data from your API
-const communities = [
-  {
-    id: 1,
-    name: "Mindfulness & Meditation",
-    createdBy: "John Doe",
-    memberCount: 1250,
-    topics: ["Meditation", "Mindfulness", "Wellness"],
-    lastActive: "2024-03-20",
-  },
-  {
-    id: 2,
-    name: "Positive Psychology",
-    createdBy: "Jane Smith",
-    memberCount: 850,
-    topics: ["Psychology", "Happiness", "Mental Health"],
-    lastActive: "2024-03-19",
-  },
-  {
-    id: 3,
-    name: "Personal Growth",
-    createdBy: "Mike Johnson",
-    memberCount: 2100,
-    topics: ["Self-improvement", "Motivation", "Success"],
-    lastActive: "2024-03-18",
-  },
-];
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  FiEye,
+  FiTrash2,
+  FiEdit,
+  FiSearch,
+  FiUsers,
+  FiLock,
+  FiGlobe,
+} from "react-icons/fi";
+import CommunityService from "@/services/community.service";
+import type { Community } from "@/types";
+import CreateCommunityModal from "@/components/modals/CreateCommunityModal";
+import EditCommunityModal from "@/components/modals/EditCommunityModal";
+import DeleteCommunityModal from "@/components/modals/DeleteCommunityModal";
+import ViewCommunityModal from "@/components/modals/ViewCommunityModal";
 
 const Communities = () => {
-  const handleView = (id: number) => {
-    console.log("View community:", id);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    loadCommunities();
+  }, []);
+
+  const loadCommunities = async () => {
+    setLoading(true);
+    try {
+      const data = await CommunityService.getAllCommunities();
+      console.log(data, "data");
+
+      setCommunities(data);
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.message || "Failed to load communities"
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRemove = (id: number) => {
-    console.log("Remove community:", id);
+  const filteredCommunities = communities.filter(
+    (community) =>
+      community.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      community.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
 
-  const handleFeature = (id: number) => {
-    console.log("Feature community:", id);
+  const handleJoinCommunity = async (communityId: string) => {
+    try {
+      await CommunityService.joinCommunity(communityId);
+      toast.success("Successfully joined community!");
+      loadCommunities(); // Refresh to update member count
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to join community");
+    }
   };
 
   return (
@@ -57,9 +78,20 @@ const Communities = () => {
         <h1 className="text-2xl font-semibold text-muted-foreground">
           Communities
         </h1>
-        <Button className="bg-primary hover:bg-primary/90">
-          Create Community
-        </Button>
+        <CreateCommunityModal onSuccess={loadCommunities} />
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search communities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
       <div className="rounded-md border border-border">
@@ -67,82 +99,127 @@ const Communities = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="text-muted-foreground">
-                Group Name
+                Community Name
               </TableHead>
+              <TableHead className="text-muted-foreground">
+                Description
+              </TableHead>
+              <TableHead className="text-muted-foreground">Type</TableHead>
               <TableHead className="text-muted-foreground">
                 Created By
               </TableHead>
-              <TableHead className="text-muted-foreground">
-                No. of Members
-              </TableHead>
-              <TableHead className="text-muted-foreground">
-                Topics Covered
-              </TableHead>
-              <TableHead className="text-muted-foreground">
-                Last Active
-              </TableHead>
+              <TableHead className="text-muted-foreground">Created</TableHead>
+              <TableHead className="text-muted-foreground">Members</TableHead>
               <TableHead className="text-right text-muted-foreground">
                 Actions
               </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {communities.map((community) => (
-              <TableRow key={community.id}>
-                <TableCell className="font-medium text-foreground/80">
-                  {community.name}
-                </TableCell>
-                <TableCell className="text-foreground/70">
-                  {community.createdBy}
-                </TableCell>
-                <TableCell className="text-foreground/70">
-                  {community.memberCount.toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {community.topics.map((topic, index) => (
-                      <span
-                        key={index}
-                        className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary/80"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell className="text-foreground/70">
-                  {community.lastActive}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleView(community.id)}
-                      className="hover:bg-primary/10 hover:text-primary/80"
-                    >
-                      <FiEye className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(community.id)}
-                      className="hover:bg-destructive/10 hover:text-destructive/80"
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleFeature(community.id)}
-                      className="hover:bg-primary/10 hover:text-primary/80"
-                    >
-                      <FiStar className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  Loading communities...
                 </TableCell>
               </TableRow>
-            ))}
+            ) : filteredCommunities.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-8">
+                  {searchTerm
+                    ? "No communities found matching your search."
+                    : "No communities found."}
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredCommunities.map((community) => (
+                <TableRow key={community.id}>
+                  <TableCell className="font-medium text-foreground/80">
+                    <div className="flex items-center gap-2">
+                      {community.name}
+                      {community.isPrivate ? (
+                        <FiLock className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <FiGlobe className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-foreground/70 max-w-xs truncate">
+                    {community.description}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={community.isPrivate ? "secondary" : "default"}
+                    >
+                      {community.isPrivate ? "Private" : "Public"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-foreground/70">
+                    {community.createdBy
+                      ? `${community.createdBy.firstName} ${community.createdBy.lastName}`
+                      : "Unknown"}
+                  </TableCell>
+                  <TableCell className="text-foreground/70">
+                    {formatDate(community.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-foreground/70">
+                    <div className="flex items-center gap-1">
+                      <FiUsers className="h-4 w-4" />
+                      <span>{community.members?.length || 0}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <ViewCommunityModal
+                        community={community}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-primary/10 hover:text-primary/80"
+                          >
+                            <FiEye className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      <EditCommunityModal
+                        community={community}
+                        onSuccess={loadCommunities}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-primary/10 hover:text-primary/80"
+                          >
+                            <FiEdit className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      <DeleteCommunityModal
+                        community={community}
+                        onSuccess={loadCommunities}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="hover:bg-destructive/10 hover:text-destructive/80"
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </Button>
+                        }
+                      />
+                      {/* <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleJoinCommunity(community.id)}
+                        className="hover:bg-primary/10 hover:text-primary/80"
+                      >
+                        Join
+                      </Button> */}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
