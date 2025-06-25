@@ -37,7 +37,7 @@ const CategoryService = {
   ): Promise<Category> => {
     try {
       const response = await api.post<Category>(
-        "/category/create",
+        "/category/",
         categoryData
       );
       return response.data;

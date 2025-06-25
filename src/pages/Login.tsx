@@ -35,6 +35,7 @@ const Login = () => {
 
     try {
       const response = await AuthService.login(formData);
+console.log(response);
 
       if (response.success && response.data.user.isAdmin) {
         navigate("/"); // Redirect to dashboard
