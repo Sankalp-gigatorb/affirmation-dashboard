@@ -9,6 +9,9 @@ import CategoriesManagement from "./pages/CategoriesManagement";
 import Users from "./pages/Users";
 import Communities from "./pages/Communities";
 import Subscriptions from "./pages/Subscriptions";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionCancel from "./pages/SubscriptionCancel";
+import AdminSubscriptions from "./pages/AdminSubscriptions";
 import Notifications from "./pages/Notifications";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
@@ -152,6 +155,23 @@ function App() {
           />
 
           <Route
+            path="/admin/subscriptions"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <AdminSubscriptions />
+                    </main>
+                  </div>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/notifications"
             element={
               <ProtectedRoute>
@@ -201,6 +221,13 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Subscription Success and Cancel Routes */}
+          <Route
+            path="/subscription/success"
+            element={<SubscriptionSuccess />}
+          />
+          <Route path="/subscription/cancel" element={<SubscriptionCancel />} />
         </Routes>
       </BrowserRouter>
     </>

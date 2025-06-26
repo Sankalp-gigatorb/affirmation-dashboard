@@ -11,6 +11,7 @@ import {
   FiLogOut,
   FiFileText,
   FiFolder,
+  FiShield,
 } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import AuthService from "@/services/auth.service";
@@ -36,6 +37,11 @@ const Sidebar = () => {
     { name: "Users", icon: FiUsers, path: "/users" },
     { name: "Communities", icon: FiCommunities, path: "/communities" },
     { name: "Subscriptions", icon: FiCreditCard, path: "/subscriptions" },
+    {
+      name: "Admin Subscriptions",
+      icon: FiShield,
+      path: "/admin/subscriptions",
+    },
     { name: "Notifications", icon: FiBell, path: "/notifications" },
     { name: "Reports", icon: FiBarChart2, path: "/reports" },
     { name: "Settings", icon: FiSettings, path: "/settings" },
