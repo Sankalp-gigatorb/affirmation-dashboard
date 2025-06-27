@@ -6,12 +6,13 @@ import { getMessaging } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDsK2AqdJgI8Qs8Tq5oz2AwYTIItpcmg7s",
-  authDomain: "affirmation-dcb89.firebaseapp.com",
-  projectId: "affirmation-dcb89",
-  storageBucket: "affirmation-dcb89.firebasestorage.app",
-  messagingSenderId: "943424358644",
-  appId: "1:943424358644:web:a287f1c9a5e27614b536a1",
+  apiKey: "AIzaSyABcbi890HHLgiUultzwBKX_JF4bm58v1o",
+  authDomain: "wishara-3fc91.firebaseapp.com",
+  projectId: "wishara-3fc91",
+  storageBucket: "wishara-3fc91.firebasestorage.app",
+  messagingSenderId: "630149572513",
+  appId: "1:630149572513:web:88c27fd092b248bf514de0",
+  measurementId: "G-K9QMSYR4LN",
 };
 
 // Initialize Firebase
