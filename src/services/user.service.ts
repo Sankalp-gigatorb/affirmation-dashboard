@@ -282,6 +282,18 @@ class UserService {
       deletedCount: response.data.data.deletedCount || 0,
     };
   }
+
+  // Get current user's profile
+  async getCurrentUserProfile(): Promise<AdminUser> {
+    const response = await api.get<UserResponse>("/user/profile");
+    return response.data.data;
+  }
+
+  // Update current user's profile
+  async updateCurrentUserProfile(data: UpdateUserData): Promise<AdminUser> {
+    const response = await api.put<UserResponse>("/user/profile", data);
+    return response.data.data;
+  }
 }
 
 export default new UserService();

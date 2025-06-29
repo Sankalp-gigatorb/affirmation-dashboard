@@ -15,6 +15,7 @@ import AdminSubscriptions from "./pages/AdminSubscriptions";
 import Notifications from "./pages/Notifications";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -215,6 +216,23 @@ function App() {
                     <Header />
                     <main>
                       <Settings />
+                    </main>
+                  </div>
+                </div>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <div className="flex">
+                  <Sidebar />
+                  <div className="flex-1">
+                    <Header />
+                    <main>
+                      <Profile />
                     </main>
                   </div>
                 </div>
