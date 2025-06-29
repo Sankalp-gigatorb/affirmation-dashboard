@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LineChart,
@@ -14,64 +14,109 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  AreaChart,
+  Area,
 } from "recharts";
 import { NotificationTester } from "@/components/notifications/NotificationTester";
 import { TokenTester } from "../components/notifications/TokenTester";
-
-// Mock data - replace with actual data from your API
-const userSignupsData = [
-  { month: "Jan", users: 120 },
-  { month: "Feb", users: 180 },
-  { month: "Mar", users: 240 },
-  { month: "Apr", users: 280 },
-  { month: "May", users: 320 },
-  { month: "Jun", users: 380 },
-];
-
-const affirmationCategoriesData = [
-  { name: "Mindfulness", value: 35 },
-  { name: "Success", value: 25 },
-  { name: "Health", value: 20 },
-  { name: "Relationships", value: 15 },
-  { name: "Career", value: 5 },
-];
-
-const postVolumeData = [
-  { day: "Mon", posts: 45 },
-  { day: "Tue", posts: 52 },
-  { day: "Wed", posts: 38 },
-  { day: "Thu", posts: 65 },
-  { day: "Fri", posts: 48 },
-  { day: "Sat", posts: 72 },
-  { day: "Sun", posts: 58 },
-];
+import DashboardService from "@/services/dashboard.service";
+import type { DashboardStats } from "@/services/dashboard.service";
+import AnalyticsService from "@/services/analytics.service";
 
 const COLORS = ["#fdcb6e", "#10b981", "#6366f1", "#f59e0b", "#ef4444"];
 
 const Dashboard = () => {
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [completionRate, setCompletionRate] = useState<{
+    total: number;
+    completed: number;
+    rate: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [stats, completion] = await Promise.all([
+          DashboardService.getDashboardStats(),
+          AnalyticsService.getAffirmationCompletionRate(),
+        ]);
+        setDashboardStats(stats);
+        setCompletionRate(completion);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError("Failed to load dashboard data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading dashboard data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-red-600">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardStats) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">No data available</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
-      <TokenTester />
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-      <p>Welcome to the admin dashboard.</p>
-      {/* Add dashboard widgets and stats here */}
+      <p className="text-muted-foreground mb-6">
+        Welcome to the admin dashboard. Here's an overview of your platform's
+        performance.
+      </p>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <Card>
-          {/* <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Affirmations
             </CardTitle>
             <span className="text-2xl">✅</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">2,847</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats.affirmations.total.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +12% from last month
+              Across all categories
             </p>
-          </CardContent> */}
-          <NotificationTester />
+          </CardContent>
         </Card>
 
         <Card>
@@ -80,21 +125,12 @@ const Dashboard = () => {
             <span className="text-2xl">👤</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
-            <p className="text-xs text-muted-foreground">+8% from last month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Scheduled Today
-            </CardTitle>
-            <span className="text-2xl">🗓️</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">156</div>
-            <p className="text-xs text-muted-foreground">+23% from yesterday</p>
+            <div className="text-2xl font-bold">
+              {dashboardStats.users.total.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardStats.users.active} active users
+            </p>
           </CardContent>
         </Card>
 
@@ -106,16 +142,36 @@ const Dashboard = () => {
             <span className="text-2xl">📈</span>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">892</div>
+            <div className="text-2xl font-bold">
+              {dashboardStats.subscriptions.active.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">
-              +15% from last month
+              ${dashboardStats.subscriptions.revenue.total.toFixed(2)} monthly
+              revenue
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Community Posts
+            </CardTitle>
+            <span className="text-2xl">💬</span>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {dashboardStats.posts.total.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Total community engagement
             </p>
           </CardContent>
         </Card>
       </div>
 
       {/* Most Popular Affirmation */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>Most Popular Affirmation</CardTitle>
         </CardHeader>
@@ -124,10 +180,12 @@ const Dashboard = () => {
             <span className="text-2xl">🧠</span>
             <div>
               <p className="font-medium">
-                "I am capable of achieving great things"
+                "{dashboardStats.affirmations.mostPopular.content}"
               </p>
               <p className="text-sm text-muted-foreground">
-                Tag: Success • Used 1,234 times
+                Tag: {dashboardStats.affirmations.mostPopular.category} • Used{" "}
+                {dashboardStats.affirmations.mostPopular.usageCount.toLocaleString()}{" "}
+                times
               </p>
             </div>
           </div>
@@ -135,7 +193,7 @@ const Dashboard = () => {
       </Card>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
         {/* User Signups Chart */}
         <Card>
           <CardHeader>
@@ -144,19 +202,21 @@ const Dashboard = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={userSignupsData}>
+                <AreaChart data={dashboardStats.userSignups}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="users"
                     stroke="#fdcb6e"
+                    fill="#fdcb6e"
+                    fillOpacity={0.3}
                     strokeWidth={2}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -172,7 +232,7 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={affirmationCategoriesData}
+                    data={dashboardStats.affirmations.categories}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -183,12 +243,14 @@ const Dashboard = () => {
                       `${name} ${(percent * 100).toFixed(0)}%`
                     }
                   >
-                    {affirmationCategoriesData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
+                    {dashboardStats.affirmations.categories.map(
+                      (entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      )
+                    )}
                   </Pie>
                   <Tooltip />
                   <Legend />
@@ -206,7 +268,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={postVolumeData}>
+                <BarChart data={dashboardStats.posts.weeklyVolume}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="day" />
                   <YAxis />
@@ -215,6 +277,170 @@ const Dashboard = () => {
                   <Bar dataKey="posts" fill="#fdcb6e" />
                 </BarChart>
               </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Additional Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">User Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {dashboardStats.users.newThisMonth}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              New users this month
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Subscription Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">Monthly:</span>
+                <span className="font-medium">
+                  {dashboardStats.subscriptions.monthly}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Yearly:</span>
+                <span className="font-medium">
+                  {dashboardStats.subscriptions.yearly}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Revenue Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm">Monthly:</span>
+                <span className="font-medium">
+                  ${dashboardStats.subscriptions.revenue.monthly.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Yearly:</span>
+                <span className="font-medium">
+                  ${dashboardStats.subscriptions.revenue.yearly.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Completion Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {completionRate ? `${completionRate.rate.toFixed(1)}%` : "N/A"}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {completionRate
+                ? `${completionRate.completed}/${completionRate.total} completed`
+                : "No data"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Engagement Metrics */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">User Engagement</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Active Users:</span>
+                <span className="font-medium">
+                  {dashboardStats.users.active}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">With Subscription:</span>
+                <span className="font-medium">
+                  {dashboardStats.users.withSubscription}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Without Subscription:</span>
+                <span className="font-medium">
+                  {dashboardStats.users.withoutSubscription}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Content Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Affirmations:</span>
+                <span className="font-medium">
+                  {dashboardStats.affirmations.total}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Categories:</span>
+                <span className="font-medium">
+                  {dashboardStats.affirmations.categories.length}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Community Posts:</span>
+                <span className="font-medium">
+                  {dashboardStats.posts.total}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Financial Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Revenue:</span>
+                <span className="font-medium">
+                  ${dashboardStats.subscriptions.revenue.total.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Monthly Revenue:</span>
+                <span className="font-medium">
+                  ${dashboardStats.subscriptions.revenue.monthly.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Yearly Revenue:</span>
+                <span className="font-medium">
+                  ${dashboardStats.subscriptions.revenue.yearly.toFixed(2)}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>

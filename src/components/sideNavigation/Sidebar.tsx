@@ -36,15 +36,15 @@ const Sidebar = () => {
     { name: "Categories Management", icon: FiFolder, path: "/categories" },
     { name: "Users", icon: FiUsers, path: "/users" },
     { name: "Communities", icon: FiCommunities, path: "/communities" },
-    { name: "Subscriptions", icon: FiCreditCard, path: "/subscriptions" },
+    // { name: "Subscriptions", icon: FiCreditCard, path: "/subscriptions" },
     {
-      name: "Admin Subscriptions",
+      name: "Subscriptions",
       icon: FiShield,
       path: "/admin/subscriptions",
     },
     { name: "Notifications", icon: FiBell, path: "/notifications" },
-    { name: "Reports", icon: FiBarChart2, path: "/reports" },
-    { name: "Settings", icon: FiSettings, path: "/settings" },
+    // { name: "Reports", icon: FiBarChart2, path: "/reports" },
+    // { name: "Settings", icon: FiSettings, path: "/settings" },
   ];
 
   const isActive = (path: string) => {
